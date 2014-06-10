@@ -13,7 +13,7 @@ include('Room.class.php');
 
 function room_plugin_menu(&$menuItems){
 	global $_;
-	$menuItems[] = array('sort'=>1,'content'=>'<a href="index.php?module=room"><i class="icon-th-large"></i> Pieces</a>');
+	$menuItems[] = array('sort'=>1,'content'=>'<a href="index.php?module=room"><i class="icon-login"></i> Pièces</a>');
 }
 
 
@@ -21,12 +21,14 @@ function room_plugin_page($_){
 	if(isset($_['module']) && $_['module']=='room'){
 		$roomManager = new Room();
 		$rooms = $roomManager->populate();
-		if (!isset($_['id']) && count($rooms)>0)  $_['id'] = $rooms[0]->getId();
+		//if (!isset($_['id']) && count($rooms)>0)  $_['id'] = $rooms[0]->getId();
+
 		?>
 
 		<div class="row">
 			<div class="span12">
 				<ul class="nav nav-tabs">
+				<li <?php if (!isset($_['id'])): ?> class="active" <?php endif ?>><a href="index.php?module=room"><i class="icon-chevron-right"></i>Toutes les pièces</a></li>
 					<?php foreach($rooms as $room){ ?>
 					<li <?php echo (isset($_['id']) && $room->getId()==$_['id'] ?'class="active"':''); ?>><a href="index.php?module=room&id=<?php echo $room->getId(); ?>"><i class="icon-chevron-right"></i><?php echo $room->getName(); ?></a></li>
 					<?php } ?>
@@ -43,6 +45,12 @@ function room_plugin_page($_){
 				if(isset($_['id'])){
 					$room = $roomManager->getById($_['id']);
 					Plugin::callHook("node_display", array($room));
+				}
+				else
+				{
+					foreach($rooms as $room){
+						Plugin::callHook("node_display", array($room));
+					}
 				}
 				?>
 
@@ -93,18 +101,18 @@ function room_plugin_setting_page(){
 
 				<form action="action.php?action=room_add_room" method="POST"> 
 					<fieldset>
-						<legend><? echo $description ?></legend>
+						<legend><?php echo $description ?></legend>
 
 						<div class="left">
 							<label for="nameRoom">Nom</label>
-							<? if(isset($selected)){echo '<input type="hidden" name="id" value="'.$id_mod.'">';} ?>
-							<input type="text" value="<? if(isset($selected)){echo $selected->getName();} ?>" id="nameRoom" name="nameRoom" placeholder="Cuisine,salon…"/>
-							<label for="descriptionRoom">Description</label>
-							<input type="text" value="<? if(isset($selected)){echo $selected->getDescription();} ?>" name="descriptionRoom" id="descriptionRoom" />
+							<?php if(isset($selected)){echo '<input type="hidden" name="id" value="'.$id_mod.'">';} ?>
+							<input type="text" value="<?php if(isset($selected)){echo $selected->getName();} ?>" id="nameRoom" name="nameRoom" placeholder="Cuisine,salon…"/>
+							<label for="descriptionRoom">Déscription</label>
+							<input type="text" value="<?php if(isset($selected)){echo $selected->getDescription();} ?>" name="descriptionRoom" id="descriptionRoom" />
 						</div>
 
 						<div class="clear"></div>
-						<br/><button type="submit" class="btn"><? echo $button; ?></button>
+						<br/><button type="submit" class="btn"><?php echo $button; ?></button>
 					</fieldset>
 					<br/>
 				</form>
@@ -113,7 +121,7 @@ function room_plugin_setting_page(){
 					<thead>
 						<tr>
 							<th>Nom</th>
-							<th>Description</th>
+							<th>Déscription</th>
 							<th></th> 
 						</tr>
 					</thead>
@@ -192,4 +200,8 @@ function room_plugin_setting_page(){
 
 		Plugin::addHook("menubar_pre_home", "room_plugin_menu");  
 		Plugin::addHook("home", "room_plugin_page");  
+
+
+		
+
 		?>

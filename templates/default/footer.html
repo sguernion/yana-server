@@ -1,8 +1,12 @@
- <div class="well well-small" id="footer">Copyright {#PROGRAM_NAME} {#PROGRAM_VERSION} (Exécuté en {$executionTime} secondes)
-{function="Plugin::callHook("footer_post_copy", array())"}
- </div>
- </div> <!-- /container -->
 
+
+ </div> <!-- /container -->
+<div class="navbar navbar-inverse navbar-fixed-bottom" id="footer">
+      <div class="navbar-inner">
+
+ 	{#PROGRAM_NAME} {$configurationManager->get('PROGRAM_VERSION')} (Exécuté en {$executionTime} secondes) | Licence CC-by-nc-sa <i class="icon-cc"></i> <i class="icon-cc-by"></i> <i class="icon-cc-nc"></i> <i class="icon-cc-sa"></i>  
+{function="Plugin::callHook("footer_post_copy", array())"}
+ </div></div>
 
 
     <!-- Le javascript
@@ -11,7 +15,7 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/jquery.ui.custom.min.js"></script>
     <script src="js/jquery.yana.js"></script>
-	<script src="js/script.js"></script>
+	  <script src="js/script.js"></script>
 	{function="Plugin::callJs()"}
   </body>
 </html>

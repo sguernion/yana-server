@@ -11,77 +11,85 @@
 
 
 function vocalinfo_vocal_command(&$response,$actionUrl){
+	global $conf;
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' quelle heure est il',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' quelle heure est il',
 		'url'=>$actionUrl.'?action=vocalinfo_hour','confidence'=>'0.90'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' on est le combien',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' on est le combien',
 		'url'=>$actionUrl.'?action=vocalinfo_day','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' quel temps fait-il',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' quel temps fait-il',
 		'url'=>$actionUrl.'?action=vocalinfo_meteo&today=1','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' météo semaine',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' météo semaine',
 		'url'=>$actionUrl.'?action=vocalinfo_meteo','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' ya quoi a la télé',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' ya quoi a la télé',
 		'url'=>$actionUrl.'?action=vocalinfo_tv','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' ya quoi comme série a la télée',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' ya quoi comme série a la télée',
 		'url'=>$actionUrl.'?action=vocalinfo_tv&category=Série','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' ya quoi comme documentaire a la télée',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' ya quoi comme documentaire a la télée',
 		'url'=>$actionUrl.'?action=vocalinfo_tv&category=Documentaire','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' ya quoi comme comédie a la télée',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' ya quoi comme comédie a la télée',
 		'url'=>$actionUrl.'?action=vocalinfo_tv&category=Comédie','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' siffle',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' siffle',
 		'url'=>$actionUrl.'?action=vocalinfo_sound&sound=sifflement.wav','confidence'=>'0.94'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' concours de pet',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' concours de pet',
 		'url'=>$actionUrl.'?action=vocalinfo_sound&sound=pet.wav','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' mode développement',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' mode développement',
 		'url'=>$actionUrl.'?action=vocalinfo_devmod','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' concours de rot',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' concours de rot',
 		'url'=>$actionUrl.'?action=vocalinfo_sound&sound=rot.wav','confidence'=>'0.88'
 		);
-	// $response['commands'][] = array(
-	// 	'command'=>VOCAL_ENTITY_NAME.' fait la poule',
-	// 	'url'=>$actionUrl.'?action=vocalinfo_sound&sound=poule.wav','confidence'=>'0.88'
-	// 	);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' liste des commandes',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' fait la poule',
+		'url'=>$actionUrl.'?action=vocalinfo_sound&sound=poule.wav','confidence'=>'0.88'
+		);
+	$response['commands'][] = array(
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' liste des commandes',
 		'url'=>$actionUrl.'?action=vocalinfo_commands','confidence'=>'0.88'
 		);
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' diagnostique des G.P.I.O',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' diagnostique des G.P.I.O',
 		'url'=>$actionUrl.'?action=vocalinfo_gpio_diag','confidence'=>'0.88'
+		);
+	$response['commands'][] = array(
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' wikipedia exemple',
+		'url'=>$actionUrl.'?action=vocalinfo_wikipedia&word=exemple','confidence'=>'0.70'
+		);
+	$response['commands'][] = array(
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' comment vas-tu',
+		'url'=>$actionUrl.'?action=vocalinfo_mood','confidence'=>'0.88'
 		);
 
 
 	
 /*
 	$preAction =  array(
-										array('type'=>'talk','sentence'=>'Emails en cours de traitement, merci de patienter')
-											
-								);
+						array('type'=>'talk','sentence'=>'Emails en cours de traitement, merci de patienter')					
+				);
 
 	$response['commands'][] = array(
-		'command'=>VOCAL_ENTITY_NAME.' fait la poule',
+		'command'=>$conf->get('VOCAL_ENTITY_NAME').' fait la poule',
 		'preAction'=>$preAction,
 		'url'=>$actionUrl.'','confidence'=>'0.88'
 		);
@@ -229,7 +237,11 @@ function vocalinfo_action(){
 										'Mostly Cloudy'=>'plutot Nuageux',
 										'Light Rain'=>'Pluie fine',
 										'Clear'=>'Temps clair',
-										'Sunny'=>'ensoleillé'
+										'Sunny'=>'ensoleillé',
+										'Rain/Wind'=>'Pluie et vent',
+										'Rain'=>'Pluie',
+										'Wind'=>'Vent',
+										'Partly Cloudy/Wind'=>'Partiellement nuageux avec du vent'
 										);
 				$dayTranslate = array('Wed'=>'mercredi',
 										'Sat'=>'samedi',
@@ -285,7 +297,14 @@ function vocalinfo_action(){
 
 		case 'vocalinfo_tv':
 			global $_;
-				$contents = file_get_contents('http://www.webnext.fr/epg_cache/programme-tv-xml_'.date('Y-m-d').'.xml');
+
+				libxml_use_internal_errors(true);
+
+			
+				
+				$contents = file_get_contents('http://webnext.fr/epg_cache/programme-tv-rss_'.date('Y-m-d').'.xml');
+				
+
 				$xml = simplexml_load_string($contents);
 				$emissions = $xml->xpath('/rss/channel/item');
 
@@ -323,6 +342,8 @@ function vocalinfo_action(){
 				
 				$json = json_encode($response);
 				echo ($json=='[]'?'{}':$json);
+
+
 		break;
 		case 'vocalinfo_hour':
 			global $_;
@@ -337,6 +358,46 @@ function vocalinfo_action(){
 		case 'vocalinfo_day':
 			global $_;
 				$affirmation = 'Nous sommes le '.date('d/m/Y');
+				$response = array('responses'=>array(
+										array('type'=>'talk','sentence'=>$affirmation)
+													)
+								);
+				$json = json_encode($response);
+				echo ($json=='[]'?'{}':$json);
+		break;
+		case 'vocalinfo_wikipedia':
+			global $_;
+			
+				$url = 'http://fr.wikipedia.org/w/api.php?action=parse&page='.$_['word'].'&format=json&prop=text&section=0';
+				$ch = curl_init($url);
+				curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt ($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; fr-FR; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1" ); // required by wikipedia.org server; use YOUR user agent with YOUR contact information. (otherwise your IP might get blocked)
+				$c = curl_exec($ch);
+
+				$json = json_decode($c);
+
+				$content = $json->{'parse'}->{'text'}->{'*'}; // get the main text content of the query (it's parsed HTML)
+
+				$affirmation = strip_tags(str_replace('&#160;', ' ', $content)); // '&#160;' is a space, but is not recognized by yana trying to read "160"
+				
+				$response = array('responses'=>array(
+									array('type'=>'talk','sentence'=>$affirmation)
+												)
+								);
+				$json = json_encode($response);
+				echo ($json=='[]'?'{}':$json);
+		break;
+		case 'vocalinfo_mood':
+			global $_;
+				$possible_answers = array(
+					'parfaitement'
+					,'ça pourrait aller mieux'
+					,'ça roule mon pote !'
+					,'nickel'
+					,'pourquoi cette question ?'
+				);
+				
+				$affirmation = $possible_answers[rand(0,count($possible_answers)-1)];
 				$response = array('responses'=>array(
 										array('type'=>'talk','sentence'=>$affirmation)
 													)

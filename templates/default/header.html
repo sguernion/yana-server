@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="utf-8">
-    <title>{#PROGRAM_NAME} {#PROGRAM_VERSION}</title>
+    <title>{#PROGRAM_NAME} {$configurationManager->get('PROGRAM_VERSION')}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.png">
 
     <!-- Le styles -->
-    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/fontello.css">
     <link href="css/style.css" rel="stylesheet">
     {function="Plugin::callLink()"}
     {function="Plugin::callCss()"}
 
-    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="ico/favicon.png">
   </head>
 
   <body>
-    <div class="hidden" id="UPDATE_URL">{#UPDATE_URL}</div>
-    <div class="hidden" id="PROGRAM_VERSION">{#PROGRAM_VERSION}</div>
+    <div class="hidden" id="UPDATE_URL">{$configurationManager->get('UPDATE_URL')}</div>
+    <div class="hidden" id="PROGRAM_VERSION">{$configurationManager->get('PROGRAM_VERSION')}</div>
     <div class="navbar navbar-inverse navbar-fixed-top" id="header">
       
       <div class="navbar-inner">
@@ -35,20 +36,20 @@
           </button>
         <div class="nav-collapse collapse">
           <ul class="nav">
-           
-           <li><div class="logo"><span class="badge badge-warning" id="notification">&nbsp;</span>{#PROGRAM_VERSION}</div></li>
+          <li class="logoBox" title="Revenir à l'accueil"><a id="aLogoBox" href="index.php"><div class="logo"><span class="badge badge-warning" id="notification">&nbsp;</span>{$configurationManager->get('PROGRAM_VERSION')}</div></a></li>
+          <!-- <li class="logoBox"><div class="logo"><span class="badge badge-warning" id="notification">&nbsp;</span>{$configurationManager->get('PROGRAM_VERSION')}</div></li>-->
           {if="$myUser!=false"}
               <li><a href="index.php"><i class="icon-home"></i> Accueil</a></li>
               {loop="menuItems"}
               <li>{$value.content}</li>
               {/loop}
               {if="$myUser!=false && $myUser->can('configuration','r')"}
-                <li><a href="setting.php"><i class="icon-wrench"></i> Configuration</a></li>
+                <li><a href="setting.php"><i class="icon-cog"></i> Configuration</a></li>
               {/if}
               {if="$myUser!=false"}
 
             
-              <li class="infobulle"  title="Connecté avec {$myUser->getFullName()} ({$rank->getLabel()})"><a href="action.php?action=logout"><i class="icon-remove-circle"></i> Déconnexion</a></li>
+              <li class="infobulle"  title="Connecté avec {$myUser->getFullName()} ({$rank->getLabel()})"><a href="action.php?action=logout"><i class="icon-erase"></i> Déconnexion</a></li>
               {/if}
           {/if}
            </ul>

@@ -8,7 +8,7 @@
 
     class Event extends SQLiteEntity{
 
-	    protected $id,$name,$content,$year,$month,$day,$hour,$minut,$repeat,$recipients;
+	    protected $id,$name,$content,$year,$month,$day,$hour,$minut,$repeat,$recipients,$state;
 	    protected $TABLE_NAME = 'event';
 	    protected $CLASS_NAME = 'Event';
 	    protected $object_fields = 
@@ -22,6 +22,7 @@
             'hour'=>'string',
             'minut'=>'string',
 		    'repeat'=>'string',
+            'state'=>'int',
             'recipients'=>'longstring'
 	    );
      
@@ -38,6 +39,13 @@
         }
         function getId(){
             return $this->id;
+        }
+
+        function setState($state){
+            $this->state= $state;
+        }
+        function getState(){
+            return $this->state;
         }
 
         function setYear($year){
@@ -102,7 +110,32 @@
             $this->recipients= json_encode($recipients);
         }
         function getRecipients(){
-            return json_decode($this->recipients,true);
+            $rec = json_decode($this->recipients,true);
+            return is_array($rec)?$rec:array();
         }
+
+
+        public static function emit($event, $data) {  
+            if(isset($GLOBALS['events'][$event])) { 
+                foreach($GLOBALS['events'][$event] as $functionName) {  
+                    call_user_func_array($functionName, $data);  
+                }  
+            }  
+        } 
+
+        public static function on($event, $functionName) {  
+            $GLOBALS['events'][$event][] = $functionName;  
+        } 
+
+
+        public static function announce($event, $comment,$dataDescription) {  
+            $GLOBALS['eventsDictionnary'][$event]['comment'] = $comment;  
+            $GLOBALS['eventsDictionnary'][$event]['data'] = $dataDescription; 
+        } 
+
+        public static function availables($event, $comment) {  
+            return $GLOBALS['eventsDictionnary'];  
+        }
+
      }
      ?>

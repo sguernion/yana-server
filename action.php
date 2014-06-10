@@ -24,17 +24,19 @@ $myUser = (!$myUser?new User():$myUser);
 
 //Execution du code en fonction de l'action
 switch ($_['action']){
+
 	case 'login':
+	global $conf;
 	$user = $userManager->exist($_['login'],$_['password']);
-	$error = '';
+	$error = '?init=1';
 	if($user==false){
-		$error = '?error='.urlencode('le compte spécifié est inexistant');
+		$error = '&error='.urlencode('le compte spécifié est inexistant');
 	}else{
 		$_SESSION['currentUser'] = serialize($user);
 	
 
 	if(isset($_['rememberMe'])){	
-		$expire_time = time() + COOKIE_LIFETIME*86400; //Jour en secondes
+		$expire_time = time() + $conf->get('COOKIE_LIFETIME')*86400; //Jour en secondes
 		
 		//On crée un cookie dans la bd uniquement si aucun autre cookie n'existe sinon
 		//On rend inutilisable le cookie utilisé par un autre navigateur
@@ -50,7 +52,7 @@ switch ($_['action']){
 		{
 			$cookie_token = $actual_cookie;
 		}	
-		Functions::makeCookie(COOKIE_NAME,$cookie_token,$expire_time);
+		Functions::makeCookie($conf->get('COOKIE_NAME'),$cookie_token,$expire_time);
 	}
 	}
 	
@@ -169,15 +171,16 @@ else
 	break;
 
 	case 'logout':
-
+	global $conf;
+	
 	//Détruire le cookie uniquement s'il existe sur cette ordinateur
 	//Afin de le garder dans la BD pour les autres ordinateurs/navigateurs
-	if(isset($_COOKIE[COOKIE_NAME])){
+	if(isset($_COOKIE[$conf->get('COOKIE_NAME')])){
 	$user = new User();
 	$user = $userManager->load(array("id"=>$myUser->getId()));
 	$user->setCookie("");
 	$user->save();
-	Functions::destroyCookie(COOKIE_NAME);
+	Functions::destroyCookie($conf->get('COOKIE_NAME'));
 	}
 
 	$_SESSION = array();
@@ -189,6 +192,9 @@ else
 	Functions::goback(" ./index");
 	break;
 
+	case 'KNOCK_KNOCK_YANA':
+		exit('1');
+	break;
 
 	case 'changePluginState':
 	if($myUser==false) exit('Vous devez vous connecter pour cette action.');
@@ -199,7 +205,7 @@ else
 	}else{
 		Plugin::disabled($_['plugin']);
 	}
-	Functions::goback("setting","plugin");
+	Functions::goback("setting","plugin","&block=".$_['block']);
 	break;
 
 	case 'crontab':
@@ -214,7 +220,9 @@ else
 	case 'GET_SPEECH_COMMAND':
 	if($myUser->getId()=='') exit('{"error":"invalid or missing token"}');
 	if(!$myUser->can('vocal','r')) exit('{"error":"insufficient permissions for this account"}');
-	$actionUrl = 'http://'.$_SERVER['SERVER_ADDR'].':'.$_SERVER['SERVER_PORT'].$_SERVER['REQUEST_URI'];
+	
+	list($host,$port) = explode(':',$_SERVER['HTTP_HOST']);
+	$actionUrl = 'http://'.$host.':'.$_SERVER['SERVER_PORT'].$_SERVER['REQUEST_URI'];
 	$actionUrl = substr($actionUrl,0,strpos($actionUrl , '?'));
 	
 	Plugin::callHook("vocal_command", array(&$response,$actionUrl));
@@ -241,7 +249,7 @@ else
 
 	foreach ($events as $event) {
 
-		if(in_array($checker,$event->getRecipients())){
+		if(in_array($checker,$event->getRecipients()) && $event->getState()=='1'){
 			if( 
 			($event->getMinut() == '*' || in_array($minut,explode(',',$event->getMinut())) ) &&
 			($event->getHour() == '*' || in_array($hour,explode(',',$event->getHour())) ) &&
@@ -305,14 +313,15 @@ else
 		$tpl->assign('heat',Monitoring::heat());
 		$tpl->assign('disks',Monitoring::disks());*/
 			case 'dash_system':
-				//$heat = Monitoring::heat();
-				$heat = shell_exec("/opt/vc/bin/vcgencmd measure_temp | cut -c 6-");
+				//echo "heat".$heat;
+				$heat = Monitoring::heat();
+				//$heat = shell_exec("/opt/vc/bin/vcgencmd measure_temp | cut -c 6-");
 				$cpu = Monitoring::cpu();
 				echo '<ul>
 				    	<li><strong>Distribution :</strong> '.Monitoring::distribution().'</li>
 				    	<li><strong>Kernel :</strong> '.Monitoring::kernel().'</li>
 				    	<li><strong>HostName :</strong> '.Monitoring::hostname().'</li>
-				    	<li><strong>Temperature :</strong>  <span class="label label-warning">'.$heat.'</span></li>
+				    	<li><strong>Température :</strong>  <span class="label '.$heat["label"].'">'.$heat["degrees"].'°C</span></li>
 				    	<li><strong>Temps de marche :</strong> '.Monitoring::uptime().'</li>
 				    	<li><strong>CPU :</strong>  <span class="label label-info">'.$cpu['current_frequency'].' Mhz</span> (Max '.$cpu['maximum_frequency'].'  Mhz/ Min '.$cpu['minimum_frequency'].'  Mhz)</li>
 				    </ul>';
@@ -342,7 +351,7 @@ else
 				echo '<ul>';
 
 				foreach ($hdds as $value) {
-					'<li><strong class="badge">'.$value['name'].'</strong> Espace : '.$value['used'].'/'.$value['total'].' Format : '.$value['format'].' </li>';
+					echo '<li><strong class="badge">'.$value['name'].'</strong><br><strong> Espace :</strong> '.$value['used'].'/'.$value['total'].'<strong> Format :</strong> '.$value['format'].' </li>';
 				}
 				echo '</ul>';
 			break;
@@ -372,6 +381,48 @@ else
 
 			    echo '</ul></pre>';
 			break;
+		}
+	break;
+
+
+	case 'installPlugin':
+	$tempZipName = 'plugins/'.md5(microtime());
+	echo '<br/>Téléchargement du plugin...';
+	file_put_contents($tempZipName,file_get_contents(urldecode($_['zip'])));
+	if(file_exists($tempZipName)){
+		echo '<br/>Plugin téléchargé <span class="label label-success">OK</span>';
+		echo '<br/>Extraction du plugin...';
+		$zip = new ZipArchive;
+		$res = $zip->open($tempZipName);
+		if ($res === TRUE) {
+			$tempZipFolder = $tempZipName.'_';
+			$zip->extractTo($tempZipFolder);
+			$zip->close();
+			echo '<br/>Plugin extrait <span class="label label-success">OK</span>';
+			$pluginName = glob($tempZipFolder.'/*.plugin*.php');
+			if(count($pluginName)>0){
+			$pluginName = str_replace(array($tempZipFolder.'/','.enabled','.disabled','.plugin','.php'),'',$pluginName[0]);
+				if(!file_exists('plugins/'.$pluginName)){
+					echo '<br/>Renommage...';
+					if(rename($tempZipFolder,'plugins/'.$pluginName)){
+						echo '<br/>Plugin installé, <span class="label label-info">pensez à l\'activer</span>';
+					}else{
+						Functions::rmFullDir($tempZipFolder);
+						echo '<br/>Impossible de renommer le plugin <span class="label label-error">Erreur</span>';
+					}
+				}else{
+					echo '<br/>Plugin déjà installé <span class="label label-info">OK</span>';
+				}
+			}else{
+				echo '<br/>Plugin invalide, fichier principal manquant <span class="label label-error">Erreur</span>';
+			}
+
+		} else {
+		  echo '<br/>Echec de l\'extraction <span class="label label-error">Erreur</span>';
+		}
+		 unlink($tempZipName);
+		}else{
+			echo '<br/>Echec du téléchargement <span class="label label-error">Erreur</span>';
 		}
 	break;
 

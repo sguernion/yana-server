@@ -38,6 +38,9 @@ function eventmanager_action(){
 				$event->addRecipient($_['eventTarget']);
 				$content[0]['type'] = $_['eventType'];
 
+				$event->setState($_['eventState']);
+				
+
 				switch($content[0]['type']){
 					case 'talk':
 						$content[0]['sentence'] = $_['eventContent'];
@@ -83,7 +86,7 @@ function eventmanager_action(){
 
 function eventmanager_plugin_menu(&$menuItems){
 	global $_;
-	$menuItems[] = array('sort'=>1,'content'=>'<a href="index.php?module=eventmanager"><i class="icon-time"></i> Evenements</a>');
+	$menuItems[] = array('sort'=>1,'content'=>'<a href="index.php?module=eventmanager"><i class="icon-back-in-time"></i> Événements</a>');
 }
 
 
@@ -106,96 +109,116 @@ function eventmanager_plugin_page($_){
 			<div class="span12">
 
 
-				<h1>Evenements</h1>
+				<h1>Événements</h1>
 				
 				<form action="action.php?action=eventmanager_save_event" method="POST">
 				<fieldset>
-				    <legend>Gestion des evenements</legend>
-				    <p>Ce module vous permet de créer un évenement en fonction d'une date que le client (yana windows ou yana for android) 
+				    <legend>Gestion des événements</legend>
+				    <p>Ce module vous permet de créer un événement en fonction d'une date que le client (yana windows ou yana for android) 
 				    	ou le serveur (yana-server sur le rapsberry PI) pourra retranscrire.
-				    	<br/>Pour le client, l'évenement peut être une action parole (prononce une phrase), une commande (une commande est lancée sur
+				    	<br/>Pour le client, l'événement peut être une action parole (prononce une phrase), une commande (une commande est lancée sur
 				    	le poste qui execute yana client), ou encore  un son à jouer (le son doit être un .wav situé dans le repertoire son de yana-windows)
-				    	<br/><br/>Pour le serveur, l'évenement peut être une commande (lancée sur le rapsberry PI), ou un changement d'état GPIO.</p>
-				    <span class="row">
-				    	<span class="span6">
+				    	<br/><br/>Pour le serveur, l'événement peut être une commande (lancée sur le rapsberry PI), ou un changement d'état GPIO.</p>
+				   
+
+
+						<div class="row">
+							<div class="flatBloc blue-color">
+								<h3><i class="icon-clock"></i> Événement : heure/date</h3>
+								<div class="span2">
+									<label for="eventMinut">Minute</label>
+								    <select class="input-medium" name="eventMinut" id="eventMinut">
+								    		<option <?php  if($currentEvent->getMinut()=='*') echo 'selected="selected"';  ?> value="*">Toutes</option>
+								    	<?php for($i=0;$i<60;$i++){ ?>
+								    		<option <?php  if($currentEvent->getMinut()==''.$i)  echo 'selected="selected"';  ?>><?php echo $i; ?></option>
+								    	<?php } ?>
+								    </select>
+								</div>
+
+								<div class="span2">
+									<label for="eventHour">Heure</label>
+
+								    <select class="input-medium" name="eventHour" id="eventHour">
+								    		<option <?php  if($currentEvent->getHour()=='*'){  echo 'selected="selected"'; } ?> value="*">Toutes</option>
+								    	<?php for($i=0;$i<24;$i++){ ?>
+								    		<option <?php  if($currentEvent->getHour()==''.$i) echo 'selected="selected"';  ?>><?php echo $i; ?></option>
+								    	<?php } ?>
+								    </select>
+								</div>
+
+								<div class="span2">
+									<label for="eventDay">Jour</label>
+								    <select class="input-medium" name="eventDay" id="eventDay">
+								    		<option <?php  if($currentEvent->getDay()=='*') echo 'selected="selected"';  ?> value="*">Tous</option>
+								    	<?php for($i=1;$i<32;$i++){ ?>
+								    		<option <?php  if($currentEvent->getDay()==''.$i) echo 'selected="selected"';  ?>><?php echo $i; ?></option>
+								    	<?php } ?>
+								    </select>
+								</div>
+
+								<div class="span2">
+									<label for="eventMonth">Mois</label>
+								    <select class="input-medium" name="eventMonth" id="eventMonth">
+								    		<option <?php  if($currentEvent->getMonth()=='*') echo 'selected="selected"';  ?> value="*">Tous</option>
+								    	<?php for($i=1;$i<13;$i++){ ?>
+								    		<option <?php  if($currentEvent->getMonth()==''.$i) echo 'selected="selected"';  ?>><?php echo $i; ?></option>
+								    	<?php } ?>
+								    </select>
+								</div>
+
+								<div class="span3">
+									<label for="eventYear">Année (taper * pour toutes)</label>
+								    <input class="input-medium" type="text" value="<?php echo $currentEvent->getYear(); ?>" name="eventYear" id="eventYear" placeholder="1988" />
+								</div>
+								<div class="clear"></div>
+						</div>
+
+					</div>
+
+
+
+
+					 <div class="row">
+					 	<div class="flatBloc green-color">
+								<h3><i class="icon-forward"></i> Action résultante</h3>
+				    	<div class="span4">
 						 
 							    <label for="eventName">Nom</label>
-							    <input class="input-xxlarge" type="text" id="eventName" value="<?php echo $currentEvent->getName(); ?>"  name="eventName" placeholder="ex : Signale un anniversaire"/>
+							    <input class="input-xlarge" type="text" id="eventName" value="<?php echo $currentEvent->getName(); ?>"  name="eventName" placeholder="ex : Signale un anniversaire"/>
 						
-						</span>
+						</div>
 
 
-						<span class="span2">
+						<div class="span2">
 						<?php 
 								$recipients = $currentEvent->getRecipients();
 								$content = $currentEvent->getContent();
 								$action = $content;
 							?>
-						    <label for="eventType">Cible</label>
-						    <select class="input-medium" name="eventTarget" onready="setActionTypeList('<?php echo $action['type']; ?>');" onchange="setActionTypeList('<?php echo $action['type']; ?>');">
+						    <label for="eventTarget">Cible</label>
+						    <select class="input-medium" name="eventTarget" id="eventTarget" onready="setActionTypeList('<?php echo $action['type']; ?>');" onchange="setActionTypeList('<?php echo $action['type']; ?>');">
 						    	<option <?php echo ($recipients[0]=='client'?'selected="selected"':''); ?> value="client">Client</option>
 						    	<option <?php echo ($recipients[0]=='server'?'selected="selected"':''); ?> value="server">Serveur</option>
 						    </select>
 					
-						</span>
+						</div>
 
-						<span class="span2">
+						<div class="span2">
 						    <label for="eventType">Action</label>
-						    <select class="input-medium" name="eventType" value="<?php echo $action['type']; ?>"></select>
-						</span>
-		
-						</span>
-						<span class="row">
-						<span class="span2">
-							<label for="eventMinut">Minute</label>
-						    <select class="input-medium" name="eventMinut" id="eventMinut">
-						    		<option <?php  if($currentEvent->getMinut()=='*') echo 'selected="selected"';  ?> value="*">Toutes</option>
-						    	<?php for($i=0;$i<60;$i++){ ?>
-						    		<option <?php  if($currentEvent->getMinut()==''.$i)  echo 'selected="selected"';  ?>><?php echo $i; ?></option>
-						    	<?php } ?>
+						    <select class="input-medium" id="eventType" name="eventType" value="<?php echo $action['type']; ?>"></select>
+						</div>
+						<div class="span2">
+							
+						    <label for="eventState">État</label>
+						    <select class="input-medium" id="eventState" name="eventState">
+						    	<option value="1" <?php echo ($currentEvent->getState()=='1'?'selected="selected"':''); ?>>Actif</option>
+						    	<option value="0"  <?php echo ($currentEvent->getState()=='0'?'selected="selected"':''); ?>>Inactif</option>
 						    </select>
-						</span>
+						</div>
 
-						<span class="span2">
-							<label for="eventHour">Heure</label>
 
-						    <select class="input-medium" name="eventHour" id="eventHour">
-						    		<option <?php  if($currentEvent->getHour()=='*'){  echo 'selected="selected"'; } ?> value="*">Toutes</option>
-						    	<?php for($i=0;$i<24;$i++){ ?>
-						    		<option <?php  if($currentEvent->getHour()==''.$i) echo 'selected="selected"';  ?>><?php echo $i; ?></option>
-						    	<?php } ?>
-						    </select>
-						</span>
-
-						<span class="span2">
-							<label for="eventDay">Jour</label>
-						    <select class="input-medium" name="eventDay" id="eventDay">
-						    		<option <?php  if($currentEvent->getDay()=='*') echo 'selected="selected"';  ?> value="*">Tous</option>
-						    	<?php for($i=1;$i<32;$i++){ ?>
-						    		<option <?php  if($currentEvent->getDay()==''.$i) echo 'selected="selected"';  ?>><?php echo $i; ?></option>
-						    	<?php } ?>
-						    </select>
-						</span>
-
-						<span class="span2">
-							<label for="eventMonth">Mois</label>
-						    <select class="input-medium" name="eventMonth" id="eventMonth">
-						    		<option <?php  if($currentEvent->getMonth()=='*') echo 'selected="selected"';  ?> value="*">Tous</option>
-						    	<?php for($i=1;$i<13;$i++){ ?>
-						    		<option <?php  if($currentEvent->getMonth()==''.$i) echo 'selected="selected"';  ?>><?php echo $i; ?></option>
-						    	<?php } ?>
-						    </select>
-						</span>
-
-						<span class="span3">
-							<label for="eventYear">Année (taper * pour toutes)</label>
-						    <input class="input-medium" type="text" value="<?php echo $currentEvent->getYear(); ?>" name="eventYear" id="eventYear" placeholder="1988" />
-						</span>
 						
-						
-					</span>
-					<span class="row">
-						<span class="span12">
+						<div class="span4">
 							
 						    <label for="eventContent">Contenu</label>
 						    <textarea  class="span10" name="eventContent"  id="eventContent"><?php 
@@ -216,8 +239,20 @@ function eventmanager_plugin_page($_){
 						    ?></textarea>
 							
 							<input  type="hidden" name="eventId" value="<?php echo $currentEvent->getId(); ?>" >
-						</span>
-					</span>
+						</div>
+					
+
+
+						<div class="clear"></div>
+							</div>
+		
+						</div>
+
+
+
+
+
+				
 
 		  			<div class="clear"></div>
 				    <br/><button type="submit" class="btn">Enregistrer</button>
@@ -233,6 +268,7 @@ function eventmanager_plugin_page($_){
 				    <th>Contenu</th>
 				    <th>Dernier lancement</th>
 				    <th>Cibles</th>
+				    <th>Etat</th>
 				    <th></th>
 			    </tr>
 			    </thead>
@@ -267,6 +303,7 @@ function eventmanager_plugin_page($_){
 						    }; ?></td>
 				    <td><?php echo $event->getRepeat(); ?></td>
 				    <td><?php  echo implode(',',$recipients) ?></td>
+				    <td><?php  echo ($event->getState()=='1'?'Actif':'Inactif');?></td>
 				    <td>
 						<a class="btn" href="index.php?module=eventmanager&id=<?php echo $event->getId(); ?>"><i class="icon-edit"></i></a>
 				    	<a class="btn" href="action.php?action=eventmanager_delete_event&id=<?php echo $event->getId(); ?>"><i class="icon-remove"></i></a></td>
@@ -274,17 +311,17 @@ function eventmanager_plugin_page($_){
 			    <?php } ?>
 			    </table>
 			    
-			     <strong>Important: </strong>Pour profiter du gestionnaire d'évenement de yana <code>coté serveur</code>, vous devez ajouter une tâche
+			     <strong>Important: </strong>Pour profiter du gestionnaire d'événements de yana <code>coté serveur</code>, vous devez ajouter une tâche
 			     planifiée sur le raspberry PI, pour cela tapez :
 			     <code>sudo crontab -e</code>
 			     puis ajoutez la ligne
 			    <?php
 			     $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-				 $url = str_replace('//','/',$protocol.$_SERVER['SERVER_ADDR'].'/'.str_replace('index.php','',$_SERVER['PHP_SELF']).'/action.php?action=GET_EVENT&checker=server');
+				 $url = $protocol.str_replace('//','/','localhost/'.str_replace('index.php','',$_SERVER['PHP_SELF']).'/action.php?action=GET_EVENT&checker=server');
 
 			     echo '<code>*/1 * * * * wget '.$url.' -O /dev/null 2>&1</code>'; ?>
 			     puis sauvegardez (<code>ctrl</code>+<code>x</code> puis <code>O</code> puis <code>Entrée</code>) 
-			     <br/><br/>
+			     <br/><br/> <br/><br/>
   
 			</div>
 
@@ -300,4 +337,12 @@ Plugin::addJs('/js/main.js');
 Plugin::addHook("action_post_case", "eventmanager_action");    
 Plugin::addHook("menubar_pre_home", "eventmanager_plugin_menu");  
 Plugin::addHook("home", "eventmanager_plugin_page");  
+
+
+//Exemple vide d'interception d'évenement sur un plugin tiers (plugin radiorelay, changement d'etat)
+Event::on('relay_change_state',function($data,$state){
+	// $data = classe RadioRelay correspondante à la machine
+	// $state = etat de la machine
+});
+
 ?>

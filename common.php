@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+$start=microtime(true);
 ini_set('display_errors','1');
 
 error_reporting(E_ALL & ~E_NOTICE);
@@ -10,7 +10,7 @@ error_reporting(E_ALL & ~E_NOTICE);
 if($_SERVER["HTTP_HOST"]=='192.168.0.14' && $_SERVER['REMOTE_ADDR']=='192.168.0.69') error_reporting(E_ALL); 
 
 mb_internal_encoding('UTF-8');
-$start=microtime(true);
+
 global $myUser,$conf,$_;
 //Récuperation et sécurisation de toutes les variables POST et GET
 $_ = array_map('Functions::secure',array_merge($_POST,$_GET));
@@ -39,15 +39,15 @@ $myUser = false;
 $conf = new Configuration();
 $conf->getAll();
 //Inclusion des plugins  
-Plugin::includeAll();
+Plugin::includeAll($conf->get("DEFAULT_THEME"));
 
 if(isset($_SESSION['currentUser'])){
 	$myUser =unserialize($_SESSION['currentUser']);
 }
-if(!$myUser && isset($_COOKIE[COOKIE_NAME])){
+if(!$myUser && isset($_COOKIE[$conf->get('COOKIE_NAME')])){
 	$users = User::getAllUsers();
 	foreach ($users as $user) {
-		if($user->getCookie() == $_COOKIE[COOKIE_NAME]) 
+		if($user->getCookie() == $_COOKIE[$conf->get('COOKIE_NAME')]) 
 			{
 				$myUser = $user;
 				$myUser->loadRight();
@@ -65,7 +65,7 @@ $userManager = new User();
 $tpl = new RainTPL();
 //Definition des dossiers de template
 raintpl::configure("base_url", null );
-raintpl::configure("tpl_dir", './templates/'.DEFAULT_THEME.'/' );
+raintpl::configure("tpl_dir", './templates/'.$conf->get('DEFAULT_THEME').'/' );
 raintpl::configure("cache_dir", "./cache/tmp/" );
 $view = '';
 
