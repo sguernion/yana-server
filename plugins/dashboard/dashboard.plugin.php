@@ -36,6 +36,7 @@ function dashboard_plugin_actions(){
 
 
 			foreach($widgets as $widget){
+				if(!is_active_model($widget->model,$model)) continue;
 				$data[] = array('data'=>$widget->data,
 								'column'=>$widget->column,
 								'id'=>$widget->id,
@@ -96,6 +97,7 @@ function dashboard_plugin_actions(){
 			$widgetManager = new Widget();
 
 			foreach($_['sort']['cells'] as $id=>$sort){
+				if(empty($sort)) continue;
 				$widgetManager->change(array('cell'=>$sort['cell'],'column'=>$sort['column']),array('id'=>$id));
 			}
 			
@@ -211,6 +213,16 @@ function dashboard_plugin_preference_page(){
 	}
 }
 
+
+function is_active_model($model,$models){
+
+	foreach($models as $m){
+		
+		
+		if($m['uid'] == $model) return true;
+	}
+	return false;
+}
 
 Plugin::addJs('/js/jquery.dashboard.js',true);
 Plugin::addJs('/js/main.js',true);

@@ -240,7 +240,10 @@ class Functions
 		}
 	}
 
-
+	public static function array_rand($array){
+		return $array[array_rand($array)];
+	}
+	
 
 	public static function tail($filepath, $lines = 1, $adaptive = true) {
 		$f = @fopen($filepath, "rb");
@@ -264,6 +267,8 @@ class Functions
 		fclose($f);
 		return trim($output);
 	} 
+
+
 
 }
 ?>

@@ -10,6 +10,16 @@ class Gpio{
 
 	const GPIO_DEFAULT_PATH = '/usr/local/bin/gpio';
 	
+	public $name,$role,$wiringPiNumber,$bcmNumber,$physicalNumber;
+	
+	function __construct($name,$role,$wiringPiNumber,$bcmNumber,$physicalNumber){
+		$this->name = $name;
+		$this->role = $role;
+		$this->wiringPiNumber = $wiringPiNumber;
+		$this->bcmNumber = $bcmNumber;
+		$this->physicalNumber = $physicalNumber;
+	}
+	
 	private static function system($cmd){
 		// For compatibily with plugins wich call that method from GPIO instead of System.
 		System::command($cmd);
@@ -24,7 +34,7 @@ class Gpio{
 	}
 	public static function read($pin,$automode = false){
 		if($automode) self::mode($pin,'in');
-		return self::system(self::GPIO_DEFAULT_PATH.' read '.$pin);
+		return System::commandSilent(self::GPIO_DEFAULT_PATH.' read '.$pin);
 	}
 	public static function pulse($pin,$miliseconds,$state){
 		Gpio::write($pin,$state);

@@ -197,7 +197,10 @@ else
 	Functions::goback(" ./index");
 	break;
 
-	
+	case 'save_sentence':
+		global $conf;
+		$conf->put('last_sentence',$_['sentence']);
+	break;
 
 	case 'ENABLE_DASHBOARD':
 		Plugin::enabled('dashboard-dashboard');
@@ -311,76 +314,74 @@ else
 
 
 	case 'installPlugin':
-	if($myUser==false) exit('Vous devez vous connecter pour cette action.');
-	$tempZipName = 'plugins/'.md5(microtime());
-	echo '<br/>Téléchargement du plugin...';
-	file_put_contents($tempZipName,file_get_contents(urldecode($_['zip'])));
-	if(file_exists($tempZipName)){
-		echo '<br/>Plugin téléchargé <span class="label label-success">OK</span>';
-		echo '<br/>Extraction du plugin...';
-		$zip = new ZipArchive;
-		$res = $zip->open($tempZipName);
-		if ($res === TRUE) {
-			$tempZipFolder = $tempZipName.'_';
-			$zip->extractTo($tempZipFolder);
-			$zip->close();
-			echo '<br/>Plugin extrait <span class="label label-success">OK</span>';
-			$pluginName = glob($tempZipFolder.'/*.plugin*.php');
-			if(count($pluginName)>0){
-			$pluginName = str_replace(array($tempZipFolder.'/','.enabled','.disabled','.plugin','.php'),'',$pluginName[0]);
-				if(!file_exists('plugins/'.$pluginName)){
+		try{
+			if($myUser==false) throw new Exception('Vous devez vous connecter pour cette action.');
+
+			$tempZipName = 'plugins/'.md5(microtime());
+			echo '<br/>Téléchargement du plugin...';
+			file_put_contents($tempZipName,file_get_contents(urldecode($_['zip'])));
+			if(!file_exists($tempZipName)) throw new Exception("Echec du téléchargement");
+			echo '<br/>Plugin téléchargé <span class="label label-success">OK</span>';
+			echo '<br/>Extraction du plugin...';
+			$zip = new ZipArchive;
+			$res = $zip->open($tempZipName);
+			if ($res !== TRUE)  throw new Exception("Echec de l\'extraction");
+				$tempZipFolder = $tempZipName.'_';
+				$zip->extractTo($tempZipFolder);
+				$zip->close();
+				echo '<br/>Plugin extrait <span class="label label-success">OK</span>';
+				$pluginName = glob($tempZipFolder.'/*.plugin*.php');
+				if(count($pluginName)==0)throw new Exception("Plugin invalide, fichier principal manquant");
+					$pluginName = str_replace(array($tempZipFolder.'/','.enabled','.disabled','.plugin','.php'),'',$pluginName[0]);
+					if(file_exists('plugins/'.$pluginName)){
+						echo '<br/>Plugin déjà installé, il sera écrasé par la derniere version <span class="label label-info">OK</span>';
+						Functions::rmFullDir('plugins/'.$pluginName);
+					}
+
 					echo '<br/>Renommage...';
+			
 					if(rename($tempZipFolder,'plugins/'.$pluginName)){
 						echo '<br/>Plugin installé, <span class="label label-info">pensez à l\'activer</span>';
 					}else{
 						Functions::rmFullDir($tempZipFolder);
 						echo '<br/>Impossible de renommer le plugin <span class="label label-error">Erreur</span>';
 					}
-				}else{
-					echo '<br/>Plugin déjà installé <span class="label label-info">OK</span>';
-				}
-			}else{
-				echo '<br/>Plugin invalide, fichier principal manquant <span class="label label-error">Erreur</span>';
-			}
 
-		} else {
-		  echo '<br/>Echec de l\'extraction <span class="label label-error">Erreur</span>';
-		}
-		 unlink($tempZipName);
-		}else{
-			echo '<br/>Echec du téléchargement <span class="label label-error">Erreur</span>';
+					 unlink($tempZipName);
+			
+		}catch(Exception $e){
+			echo '<br/>'.$e->getMessage().' <span class="label label-error">Erreur</span>';
 		}
 	break;
 
 	case 'CHANGE_GPIO_STATE':
-		if($myUser==false) exit('Vous devez vous connecter pour cette action.');
+		if($myUser==false) {
+			exit('Vous devez vous connecter pour cette action.');
+		}
+		else {
+			Gpio::write($_["pin"],$_["state"],true);
+		}
 	break;
 
 	// Gestion des interfaces de seconde génération
-	case 'SUBSCRIBE_TO_CLIENT':
+	case 'ADD_CLIENT':
 		Action::write(function($_,&$response){
-			global $myUser,$conf;
-			if(!isset($_['ip'])) throw new Exception("IP invalide");
-			if(!isset($_['port']) || !is_numeric($_['port'])) throw new Exception("Port invalide");
+			global $myUser,$conf,$client;
+			if(!isset($_SERVER['argv'][2])) throw new Exception("Type client invalide");
 			
-			$url = Functions::getBaseUrl('action.php').'/action.php';
-			$client = new CLient($_['ip'],$_['port']);
+			
+			file_put_contents('filename', $_SERVER['argv'][2]);
+			
+			
 
-			Plugin::callHook("vocal_command", array(&$vocal,$url));
-			$conf =  array(
-				'VOCAL_ENTITY_NAME' => $conf->put('VOCAL_ENTITY_NAME','YANA'),
-				'SPEECH_COMMAND' => $vocal
-			);
 
-			if(!$client->suscribe($url,$myUser->getToken()))  throw new Exception("Appairage impossible");
-			if(!$client->configure($conf))  throw new Exception("Configuration impossible");
-		},array('user'=>'u'));
+			
+		});
 	break;
 
 
 	default:
 		Plugin::callHook("action_post_case", array());
-		
 	break;
 }
 

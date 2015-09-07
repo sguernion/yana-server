@@ -53,6 +53,19 @@ function wirerelay_plugin_action(){
 					$wireRelay->offcommand = $_['offWireRelay'];
 					$wireRelay->icon = $_['iconWireRelay'];
 					$wireRelay->save();
+					
+					//Reference device for other plugins
+					$device = new Device();
+					$device->label = $wireRelay->name;
+					$device->plugin = 'wireRelay';
+					$device->type = Device::ACTUATOR;
+					$device->location = $wireRelay->room;
+					$device->icon = $wireRelay->icon;
+					$device->setValue('value',0);
+					$device->state = 1;
+					$device->uid = $wireRelay->id;
+					$device->save();
+					
 					$response['message'] = 'Relais enregistré avec succès';
 				},
 				array('plugin_wirerelay'=>'c')
@@ -282,6 +295,12 @@ function wirerelay_plugin_change_state($engine,$state){
 	}else{
 		Gpio::pulse($wireRelay->pin,$wireRelay->pulse,1);
 	}
+	
+	//Reference device state change for other plugins
+	$device = new Device();
+	$device = $device->load(array('plugin'=>'wireRelay','uid'=>$wireRelay->id));
+	$device->setValue('value',$state);
+	$device->save();
 }
 
 
@@ -430,6 +449,11 @@ function wireRelay_plugin_setting_menu(){
 }
 
 
+function wireRelay_plugin_listen($command,$text,$confidence){
+	//echo 'diction de la commande : '.$command;
+}
+
+
 function wireRelay_plugin_widget(&$widgets){
 		$widgets[] = array(
 		    'uid'      => 'dash_wirerelay',
@@ -459,5 +483,7 @@ Plugin::addHook("action_post_case", "wirerelay_plugin_action");
 Plugin::addHook("vocal_command", "wirerelay_plugin_vocal_command");
 //Lie wireRelay_plugin_widget aux widgets de la dashboard
 Plugin::addHook("widgets", "wireRelay_plugin_widget");
+
+Plugin::addHook("listen", "wireRelay_plugin_listen");
 
 ?>
